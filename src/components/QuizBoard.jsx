@@ -1,6 +1,40 @@
 import React, { useState, useEffect } from 'react';
 
-const QuizBoard = ({ questionData, questionIndex, totalQuestions, onAnswer }) => {
+// Sound effects helper
+const playSound = (type) => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.5);
+    } else if (type === 'wrong') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch (e) {
+    console.error("Audio error", e);
+  }
+};
+
+const QuizBoard = ({ questionData, questionIndex, totalQuestions, onAnswer, streak }) => {
   const [timeLeft, setTimeLeft] = useState(20);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
@@ -59,6 +93,8 @@ const QuizBoard = ({ questionData, questionIndex, totalQuestions, onAnswer }) =>
       }
     }
     
+    playSound(isCorrect ? 'correct' : 'wrong');
+    
     setTimeout(() => {
       onAnswer(isCorrect, pointsEarned, option);
     }, 2000);
@@ -76,6 +112,11 @@ const QuizBoard = ({ questionData, questionIndex, totalQuestions, onAnswer }) =>
       </div>
       
       <div className="question-text">
+        {streak >= 3 && (
+          <div className="streak-badge pulse-animation" style={{ color: '#FF5722', fontWeight: 900, fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}>
+            🔥 ON FIRE! {streak} STREAK (1.5x Points)
+          </div>
+        )}
         {questionData.text || questionData.question}
       </div>
       

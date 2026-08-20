@@ -26,6 +26,7 @@ function App() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
   const [lastPointsEarned, setLastPointsEarned] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
@@ -37,6 +38,7 @@ function App() {
     setQuestions(getRandomQuestions(10)); // Mengambil 10 soal acak
     setCurrentQuestionIndex(0);
     setScore(0);
+    setStreak(0);
     setUserAnswers([]);
     setStage(STAGES.QUIZ);
   };
@@ -52,9 +54,20 @@ function App() {
       isCorrect
     }]);
 
+    let finalPoints = pointsEarned;
+    
     if (isCorrect) {
-      setScore(prev => prev + pointsEarned);
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak >= 3) {
+        finalPoints = Math.round(pointsEarned * 1.5);
+      }
+      setScore(prev => prev + finalPoints);
+    } else {
+      setStreak(0);
     }
+    
+    setLastPointsEarned(finalPoints);
     setStage(STAGES.SCORE_TRANSITION);
   };
 
@@ -83,11 +96,24 @@ function App() {
     setUserCategory('');
     setUserAvatar('');
     setScore(0);
+    setStreak(0);
     setUserAnswers([]);
   };
 
   return (
     <div className="app-container">
+      {/* Background Particles */}
+      <div className="particles-container">
+        {[...Array(15)].map((_, i) => (
+          <div key={i} className="particle"></div>
+        ))}
+      </div>
+
+      {/* Background Music for Quiz */}
+      {stage === STAGES.QUIZ && (
+        <audio src="/bgm.mp3" autoPlay loop />
+      )}
+      
       {stage === STAGES.WELCOME && (
         <WelcomeScreen 
           onStart={startQuiz} 
@@ -101,6 +127,7 @@ function App() {
           questionIndex={currentQuestionIndex}
           totalQuestions={questions.length}
           onAnswer={handleAnswer}
+          streak={streak}
         />
       )}
       
