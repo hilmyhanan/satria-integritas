@@ -60,7 +60,7 @@ const QuizBoard = ({ questionData, questionIndex, totalQuestions, onAnswer }) =>
     }
     
     setTimeout(() => {
-      onAnswer(isCorrect, pointsEarned);
+      onAnswer(isCorrect, pointsEarned, option);
     }, 2000);
   };
 

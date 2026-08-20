@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getLeaderboard } from '../firebase';
 
-const Leaderboard = ({ userScore, userName, userCategory, onRestart }) => {
+const Leaderboard = ({ userScore, userName, userCategory, userAnswers, onRestart }) => {
   const [activeTab, setActiveTab] = useState(userCategory);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState(null);
+  const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
     fetchLeaderboard(activeTab);
@@ -58,7 +59,18 @@ const Leaderboard = ({ userScore, userName, userCategory, onRestart }) => {
         </div>
       )}
 
-      <div className="leaderboard-tabs" style={{ marginTop: '2rem' }}>
+      {userAnswers && userAnswers.length > 0 && (
+        <div className="action-buttons-group" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+          <button className="btn-secondary" onClick={() => setShowReview(true)} style={{ margin: 0 }}>
+            📖 Lihat Pembahasan
+          </button>
+          <button className="btn-primary" onClick={onRestart} style={{ margin: 0 }}>
+            🏠 Beranda
+          </button>
+        </div>
+      )}
+
+      <div className="leaderboard-tabs" style={{ marginTop: '2.5rem' }}>
         <button 
           className={`tab-btn ${activeTab === 'Mahasiswa / Pelajar' ? 'active' : ''}`}
           onClick={() => setActiveTab('Mahasiswa / Pelajar')}
@@ -100,9 +112,52 @@ const Leaderboard = ({ userScore, userName, userCategory, onRestart }) => {
         </ul>
       )}
 
-      <button className="btn-primary" onClick={onRestart} style={{ marginTop: '2rem' }}>
-        Kembali ke Beranda
-      </button>
+      {(!userAnswers || userAnswers.length === 0) && (
+        <button className="btn-primary" onClick={onRestart} style={{ marginTop: '2rem' }}>
+          Kembali ke Beranda
+        </button>
+      )}
+
+      {showReview && (
+        <div className="modal-overlay fade-in" onClick={() => setShowReview(false)}>
+          <div className="modal-content review-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Pembahasan Kuis</h2>
+              <button className="close-btn" onClick={() => setShowReview(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {userAnswers.map((item, index) => (
+                <div key={index} className="review-card">
+                  <div className="review-question">
+                    <span className="q-number">{index + 1}</span>
+                    <p>{item.question.text}</p>
+                  </div>
+                  
+                  <div className="review-answer-box">
+                    <div className={`answer-pill ${item.isCorrect ? 'pill-correct' : 'pill-wrong'}`}>
+                      <strong>Jawaban Anda:</strong> {item.selectedOption}
+                      <span className="icon">{item.isCorrect ? '✓' : '✕'}</span>
+                    </div>
+                    
+                    {!item.isCorrect && (
+                      <div className="answer-pill pill-correct-key" style={{ marginTop: '0.5rem' }}>
+                        <strong>Kunci Jawaban:</strong> {item.question.answer}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {item.question.pembahasan && (
+                    <div className="explanation-box">
+                      <strong>💡 Penjelasan:</strong>
+                      <p>{item.question.pembahasan}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

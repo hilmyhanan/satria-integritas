@@ -28,6 +28,7 @@ function App() {
   const [score, setScore] = useState(0);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
   const [lastPointsEarned, setLastPointsEarned] = useState(0);
+  const [userAnswers, setUserAnswers] = useState([]);
 
   const startQuiz = (name, category, avatar) => {
     setUserName(name);
@@ -36,12 +37,21 @@ function App() {
     setQuestions(getRandomQuestions(10)); // Mengambil 10 soal acak
     setCurrentQuestionIndex(0);
     setScore(0);
+    setUserAnswers([]);
     setStage(STAGES.QUIZ);
   };
 
-  const handleAnswer = (isCorrect, pointsEarned) => {
+  const handleAnswer = (isCorrect, pointsEarned, selectedOption) => {
     setLastAnswerCorrect(isCorrect);
     setLastPointsEarned(pointsEarned);
+    
+    // Simpan jawaban untuk fitur Review
+    setUserAnswers(prev => [...prev, {
+      question: questions[currentQuestionIndex],
+      selectedOption,
+      isCorrect
+    }]);
+
     if (isCorrect) {
       setScore(prev => prev + pointsEarned);
     }
@@ -73,6 +83,7 @@ function App() {
     setUserCategory('');
     setUserAvatar('');
     setScore(0);
+    setUserAnswers([]);
   };
 
   return (
@@ -110,6 +121,7 @@ function App() {
           userScore={score}
           userName={userName}
           userCategory={userCategory}
+          userAnswers={userAnswers}
           onRestart={restartQuiz}
         />
       )}
